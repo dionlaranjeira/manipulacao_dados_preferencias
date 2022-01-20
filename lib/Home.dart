@@ -1,4 +1,7 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -9,18 +12,34 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
 
+  String _textoExibido = "";
+
   TextEditingController _controller = TextEditingController();
 
-  void _salvar(){
-    print(_controller.text);
+  Future<void> _salvar() async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString("dados", _controller.text);
+
   }
 
-  void _ler(){
-    print("Método ler chamado");
+  Future<void> _recuperar() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _textoExibido = prefs.getString("dados") ?? "";
+    });
+  }
+
+  Future<void> _deletar() async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.remove("dados");
+    setState(() {
+      _textoExibido = "";
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    _recuperar();
     return Scaffold(
       appBar: AppBar(
         title: const Text("Manipulação de dados"),
@@ -30,9 +49,9 @@ class _HomeState extends State<Home> {
         child: Column(
 
           children: [
-            const Center(
+             Center(
               child: Text(
-                "Nada salvo",
+                _textoExibido,
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
             ),
             TextField(
@@ -41,11 +60,12 @@ class _HomeState extends State<Home> {
               ),
               controller: _controller,
             ),
-            Padding(padding: const EdgeInsets.all(32),child: Row(
+            Padding(padding: const EdgeInsets.all(8),child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 ElevatedButton(onPressed: _salvar, child: const Text("SALVAR")),
-                ElevatedButton(onPressed: _ler, child: const Text("LER")),
+                ElevatedButton(onPressed: _recuperar, child: const Text("RECUPERAR")),
+                ElevatedButton(onPressed: _deletar, child: const Text("DELETAR")),
               ],
             ),)
           ],
